@@ -48,7 +48,7 @@
 #define PLL4_M_VAL_ADDR		(MSM_CLK_CTL_BASE + 0x37C)
 #define PLL4_N_VAL_ADDR		(MSM_CLK_CTL_BASE + 0x380)
 
-#define POWER_COLLAPSE_KHZ 19200
+#define POWER_COLLAPSE_KHZ 29200
 
 /* Max CPU frequency allowed by hardware while in standby waiting for an irq. */
 #define MAX_WAIT_FOR_IRQ_KHZ 128000
@@ -91,9 +91,7 @@ static struct pll_config pll4_cfg_tbl[] = {
 	[3] = {  73, 0, 1 }, /* 1401.6 MHz */
 	[4] = {  60, 0, 1 }, /* 1152 MHz */
 	[5] = {  57, 1, 2 }, /* 1104 MHz */
-#ifdef CONFIG_CHIL360_OC
-        [6] = { 54, 1, 2 }, /* 1046.7 MHz */
-#endif
+        [6] = { 58, 1, 2 }, /* 1123 MHz */
 };
 
 struct clock_state {
@@ -337,9 +335,7 @@ static struct clkctl_acpu_speed pll0_960_pll1_245_pll2_1200_pll4_1008_2p0[] = {
         { 0, 600000, ACPU_PLL_2, 2, 1, 75000, 3, 4, 160000 },
         { 1, 700800, ACPU_PLL_4, 6, 0, 87500, 3, 4, 160000, &pll4_cfg_tbl[0]},
         { 1, 1008000, ACPU_PLL_4, 6, 0, 126000, 3, 5, 200000, &pll4_cfg_tbl[1]},
-#ifdef CONFIG_CHIL360_OC
         { 1, 1046769, ACPU_PLL_4, 6, 0, 130846, 3, 5, 200000, &pll4_cfg_tbl[6]},
-#endif
         { 0 }
 };
 
@@ -354,9 +350,7 @@ static struct clkctl_acpu_speed pll0_960_pll1_196_pll2_1200_pll4_1008_2p0[] = {
         { 0, 600000, ACPU_PLL_2, 2, 1, 75000, 3, 4, 160000 },
         { 1, 700800, ACPU_PLL_4, 6, 0, 87500, 3, 4, 160000, &pll4_cfg_tbl[0]},
         { 1, 1008000, ACPU_PLL_4, 6, 0, 126000, 3, 5, 200000, &pll4_cfg_tbl[1]},
-#ifdef CONFIG_CHIL360_OC
-        { 1, 1046769, ACPU_PLL_4, 6, 0, 130846, 3, 5, 200000, &pll4_cfg_tbl[6]},
-#endif
+        { 1, 1085500, ACPU_PLL_4, 6, 0, 130846, 3, 5, 200000, &pll4_cfg_tbl[6]},
         { 0 }
 };
 
@@ -388,14 +382,14 @@ static struct clkctl_acpu_speed pll0_960_pll1_196_pll2_1200_pll4_1104[] = {
 
 /* 8625 PLL4 @ 1152MHz with GSM capable modem with v2.0 plan */
 static struct clkctl_acpu_speed pll0_960_pll1_245_pll2_1200_pll4_1152[] = {
-	{ 0, 19200, ACPU_PLL_TCXO, 0, 0, 2400, 3, 0, 30720 },
+	{ 0, 29200, ACPU_PLL_TCXO, 0, 0, 2500, 3, 0, 30720 },
 	{ 1, 245760, ACPU_PLL_1, 1, 0, 30720, 3, 1, 61440 },
 	{ 1, 320000, ACPU_PLL_0, 4, 2, 40000, 3, 2, 122880 },
 	{ 1, 480000, ACPU_PLL_0, 4, 1, 60000, 3, 3, 122880 },
 	{ 0, 600000, ACPU_PLL_2, 2, 1, 75000, 3, 4, 160000 },
-	{ 1, 700800, ACPU_PLL_4, 6, 0, 87500, 3, 4, 160000, &pll4_cfg_tbl[0]},
-	{ 1, 1008000, ACPU_PLL_4, 6, 0, 126000, 3, 5, 200000, &pll4_cfg_tbl[1]},
-	{ 1, 1152000, ACPU_PLL_4, 6, 0, 151200, 3, 6, 200000, &pll4_cfg_tbl[4]},
+	{ 1, 700800, ACPU_PLL_4, 6, 0, 67500, 3, 4, 160000, &pll4_cfg_tbl[0]},
+	{ 0, 1008000, ACPU_PLL_4, 6, 0, 126000, 3, 5, 200000, &pll4_cfg_tbl[1]},
+	{ 1, 1123000, ACPU_PLL_4, 6, 0, 130846, 3, 5, 200000, &pll4_cfg_tbl[6]},
 	{ 0 }
 };
 
@@ -1281,4 +1275,3 @@ static int __init acpuclk_7627_init(void)
 	return platform_driver_register(&acpuclk_7627_driver);
 }
 postcore_initcall(acpuclk_7627_init);
-
