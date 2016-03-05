@@ -786,7 +786,7 @@ static int32_t mt9e013_sensor_setting(struct msm_sensor_ctrl_t *s_ctrl,
 	return rc;
 }
 /*read OTP value function*/
-inline int32_t reading(struct msm_sensor_ctrl_t *s_ctrl)
+static inline int32_t reading(struct msm_sensor_ctrl_t *s_ctrl)
 {
 	int32_t rc = -1;
 	unsigned short i = 0;

@@ -174,7 +174,7 @@ static char st_device_id[] = "st_lis3xh";
 
 static int gs_data_to_compass(signed short accel_data [3])
 {
-	memset((void*)accel_data, 0, sizeof(accel_data));
+	memset((void*)accel_data, 0, sizeof((int*)accel_data));
 	accel_data[0]=gs_sensor_data[0];
 	accel_data[1]=gs_sensor_data[1];
 	accel_data[2]=gs_sensor_data[2];

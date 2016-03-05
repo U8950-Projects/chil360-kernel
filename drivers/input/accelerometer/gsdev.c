@@ -397,7 +397,7 @@ if set the value will work MMITest fail
 	    dataZ = ((dataZ_high&0x1f) <<8) |dataZ_low;
 		
 		
-		if(dataX&0x1000)/*负值*/
+		if(dataX&0x1000)/**/
 		{
 			 x=dataX -8192;         /*13 bit is sign bit, */  
 			 
@@ -407,7 +407,7 @@ if set the value will work MMITest fail
 			x = dataX;
 		}
 			
-		if(dataY&0x1000)/*负值*/
+		if(dataY&0x1000)/**/
 		{
 			y=dataY - 8192;   /*13 bit is sign bit, */   
 		}
@@ -416,7 +416,7 @@ if set the value will work MMITest fail
                  	y = dataY;
 		}
 		
-		if(dataZ&0x1000)/*负值*/
+		if(dataZ&0x1000)/**/
 		{
 			z =dataZ -8192;   /*13 bit is sign bit, */   
 		}

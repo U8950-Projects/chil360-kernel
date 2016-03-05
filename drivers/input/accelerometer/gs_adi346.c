@@ -273,7 +273,7 @@ static inline int reg_write(struct gs_data *gs, int reg, uint8_t val)
 
 static int gs_data_to_compass(signed short accel_data [3])
 {
-	memset((void*)accel_data, 0, sizeof(accel_data));
+	memset((void*)accel_data, 0, sizeof((int*)accel_data));
 	accel_data[0]=st_sensor_data[0];
 	accel_data[1]=st_sensor_data[1];
 	accel_data[2]=st_sensor_data[2];
