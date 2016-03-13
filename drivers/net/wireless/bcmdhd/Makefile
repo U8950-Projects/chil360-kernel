@@ -116,7 +116,7 @@ DHDCFLAGS += -DCUSTOM_SET_SHORT_DWELL_TIME
 # m: module type driver
 # y: built-in type driver
 ##########################
-DRIVER_TYPE ?= y
+DRIVER_TYPE ?= $(CONFIG_BCMDHD)
 
 #########################
 # Chip dependent feature

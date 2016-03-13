@@ -399,6 +399,27 @@ struct cfg80211_beacon_data {
 	size_t probe_resp_len;
 };
 
+struct mac_address {
+	u8 addr[ETH_ALEN];
+};
+
+/**
+ * struct cfg80211_acl_data - Access control list data
+ *
+ * @acl_policy: ACL policy to be applied on the station's
+ *	entry specified by mac_addr
+ * @n_acl_entries: Number of MAC address entries passed
+ * @mac_addrs: List of MAC addresses of stations to be used for ACL
+ */
+struct cfg80211_acl_data {
+	enum nl80211_acl_policy acl_policy;
+	int n_acl_entries;
+
+	/* Keep it last */
+	struct mac_address mac_addrs[];
+};
+
+
 /**
  * struct cfg80211_ap_settings - AP configuration
  *
@@ -427,6 +448,7 @@ struct cfg80211_ap_settings {
 	bool privacy;
 	enum nl80211_auth_type auth_type;
 	int inactivity_timeout;
+	const struct cfg80211_acl_data *acl;
 	unsigned int max_assoc;
 };
 
@@ -1697,6 +1719,9 @@ struct cfg80211_ops {
 				  struct net_device *dev,
 				  u16 noack_map);
 
+	int	(*set_mac_acl)(struct wiphy *wiphy, struct net_device *dev,
+			       const struct cfg80211_acl_data *params);
+
 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
 };
 
@@ -1865,10 +1890,6 @@ struct ieee80211_iface_combination {
 	bool beacon_int_infra_match;
 };
 
-struct mac_address {
-	u8 addr[ETH_ALEN];
-};
-
 struct ieee80211_txrx_stypes {
 	u16 tx, rx;
 };
@@ -2029,6 +2050,8 @@ struct wiphy {
 
 	/* Supported interface modes, OR together BIT(NL80211_IFTYPE_...) */
 	u16 interface_modes;
+
+	u16 max_acl_mac_addrs;
 
 	u32 flags, features;
 
