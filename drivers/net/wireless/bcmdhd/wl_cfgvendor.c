@@ -78,7 +78,7 @@
 #include <dhd_wlfc.h>
 #endif
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(3, 13, 0)) || defined(WL_VENDOR_EXT_SUPPORT)
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(3, 13, 0))// || defined(WL_VENDOR_EXT_SUPPORT)
 
 /*
  * This API is to be used for asynchronous vendor events. This
