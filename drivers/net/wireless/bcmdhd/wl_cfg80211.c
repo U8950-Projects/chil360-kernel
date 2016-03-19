@@ -69,9 +69,9 @@
 #include <dhd_wlfc.h>
 #endif
 
-//#if (LINUX_VERSION_CODE > KERNEL_VERSION(3, 13, 0)) || defined(WL_VENDOR_EXT_SUPPORT)
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(3, 13, 0)) || defined(WL_VENDOR_EXT_SUPPORT)
 #include <wl_cfgvendor.h>
-//#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(3, 13, 0)) || defined(WL_VENDOR_EXT_SUPPORT) */
+#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(3, 13, 0)) || defined(WL_VENDOR_EXT_SUPPORT) */
 #ifdef WL11U
 #if !defined(WL_ENABLE_P2P_IF) && !defined(WL_CFG80211_P2P_DEV_IF)
 #error You should enable 'WL_ENABLE_P2P_IF' or 'WL_CFG80211_P2P_DEV_IF' \
@@ -7964,7 +7964,7 @@ static s32 wl_setup_wiphy(struct wireless_dev *wdev, struct device *sdiofunc_dev
 #endif
 	wiphy_apply_custom_regulatory(wdev->wiphy, &brcm_regdom);
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(3, 13, 0)) || defined(WL_VENDOR_EXT_SUPPORT)
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(3, 13, 0)) //|| defined(WL_VENDOR_EXT_SUPPORT)
 	WL_ERR(("Registering Vendor80211\n"));
 	err = wl_cfgvendor_attach(wdev->wiphy, dhd);
 	if (unlikely(err < 0)) {
@@ -8645,8 +8645,10 @@ static s32 wl_handle_rssi_monitor_event(struct bcm_cfg80211 *cfg, bcm_struct_cfg
 	const wl_event_msg_t *e, void *data)
 {
 	u32 datalen = be32_to_cpu(e->datalen);
+#ifdef GSCAN_SUPPORT
 	struct net_device *ndev = cfgdev_to_wlc_ndev(cfgdev, cfg);
 	struct wiphy *wiphy = bcmcfg_to_wiphy(cfg);
+#endif
 
 	if (datalen) {
 		wl_rssi_monitor_evt_t *evt_data = (wl_rssi_monitor_evt_t *)data;
@@ -8655,9 +8657,11 @@ static s32 wl_handle_rssi_monitor_event(struct bcm_cfg80211 *cfg, bcm_struct_cfg
 			monitor_data.version = DHD_RSSI_MONITOR_EVT_VERSION;
 			monitor_data.cur_rssi = evt_data->cur_rssi;
 			memcpy(&monitor_data.BSSID, &e->addr, ETHER_ADDR_LEN);
+#ifdef GSCAN_SUPPORT
 			wl_cfgvendor_send_async_event(wiphy, ndev,
 				GOOGLE_RSSI_MONITOR_EVENT,
 				&monitor_data, sizeof(monitor_data));
+#endif
 		} else {
 			WL_ERR(("Version mismatch %d, expected %d", evt_data->version,
 			       RSSI_MONITOR_VERSION));

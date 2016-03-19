@@ -1179,16 +1179,7 @@ CONFIG_RFKILL_PM=y
 # CONFIG_NET_9P is not set
 # CONFIG_CAIF is not set
 # CONFIG_CEPH_LIB is not set
-CONFIG_NFC=y
-# CONFIG_NFC_NCI is not set
-# CONFIG_NFC_LLCP is not set
-
-#
-# Near Field Communication (NFC) devices
-#
-# CONFIG_PN544_NFC is not set
-# CONFIG_NFC_PN533 is not set
-CONFIG_HUAWEI_NFC_PN544=y
+# CONFIG_NFC is not set
 
 #
 # Device Drivers
@@ -1537,6 +1528,17 @@ CONFIG_LIBRA_SDIOIF=m
 # CONFIG_ATH6K_LEGACY_EXT is not set
 # CONFIG_ATH_COMMON is not set
 CONFIG_BCMDHD=m
+CONFIG_BCMDHD_SDIO=y
+# CONFIG_BCM4354 is not set
+# CONFIG_BCM4356 is not set
+# CONFIG_BCM4358 is not set
+CONFIG_BCMDHD_FW_PATH="/system/vendor/firmware/fw_bcmdhd.bin"
+CONFIG_BCMDHD_NVRAM_PATH="/system/etc/nvram_4330.txt"
+# CONFIG_DHD_USE_STATIC_BUF is not set
+# CONFIG_DHD_USE_SCHED_SCAN is not set
+CONFIG_DHD_SET_RANDOM_MAC_VAL=0x001A11
+# CONFIG_DHD_OF_SUPPORT is not set
+# CONFIG_DHD_USE_GSCAN is not set
 # CONFIG_BRCMFMAC is not set
 # CONFIG_HOSTAP is not set
 # CONFIG_IWM is not set
@@ -3028,10 +3030,6 @@ CONFIG_ANDROID_LOW_MEMORY_KILLER_AUTODETECT_OOM_ADJ_VALUES=y
 # CONFIG_ANDROID_INTF_ALARM_DEV is not set
 # CONFIG_PHONE is not set
 # CONFIG_USB_WPAN_HCD is not set
-
-#
-# Near Field Communication (NFC) devices
-#
 
 #
 # Qualcomm MSM specific device drivers

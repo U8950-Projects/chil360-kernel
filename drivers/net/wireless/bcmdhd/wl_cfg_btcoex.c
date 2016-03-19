@@ -421,7 +421,9 @@ int wl_cfg80211_set_btcoex_dhcp(struct net_device *dev, int mode)
 
 					WL_TRACE(("enable BT DHCP Work\n"));
 					btco_inf->bt_state = BT_DHCP_START;
+#ifdef GSCAN_SUPPORT
 					mod_delayed_work(system_wq, &btco_inf->work, 0);
+#endif
 				}
 			}
 		} else {

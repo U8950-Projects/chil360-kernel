@@ -76,3 +76,8 @@ config DHD_OF_SUPPORT
 	bool "Use in-drive platform device"
 	depends on BCMDHD
 	default n
+
+config DHD_USE_GSCAN
+	bool "Gscan support"
+	depends on BCMDHD
+	default n
