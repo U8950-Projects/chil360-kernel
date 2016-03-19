@@ -1,7 +1,9 @@
 /*
- * Broadcom Ethernettype  protocol definitions
+ * Header file describing the common ip parser function.
  *
- * Copyright (C) 1999-2012, Broadcom Corporation
+ * Provides type definitions and function prototypes used to parse ip packet.
+ *
+ * Copyright (C) 1999-2014, Broadcom Corporation
  * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -21,62 +23,20 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmeth.h 294352 2011-11-06 19:23:00Z $
+ * $Id$
  */
 
+#ifndef _dhd_ip_h_
+#define _dhd_ip_h_
 
-
-#ifndef _BCMETH_H_
-#define _BCMETH_H_
-
-#ifndef _TYPEDEFS_H_
-#include <typedefs.h>
-#endif
-
-
-#include <packed_section_start.h>
-
-
-
-
-
-
-
-#define	BCMILCP_SUBTYPE_RATE		1
-#define	BCMILCP_SUBTYPE_LINK		2
-#define	BCMILCP_SUBTYPE_CSA		3
-#define	BCMILCP_SUBTYPE_LARQ		4
-#define BCMILCP_SUBTYPE_VENDOR		5
-#define	BCMILCP_SUBTYPE_FLH		17
-
-#define BCMILCP_SUBTYPE_VENDOR_LONG	32769
-#define BCMILCP_SUBTYPE_CERT		32770
-#define BCMILCP_SUBTYPE_SES		32771
-
-
-#define BCMILCP_BCM_SUBTYPE_RESERVED		0
-#define BCMILCP_BCM_SUBTYPE_EVENT		1
-#define BCMILCP_BCM_SUBTYPE_SES			2
-
-
-#define BCMILCP_BCM_SUBTYPE_DPT			4
-
-#define BCMILCP_BCM_SUBTYPEHDR_MINLENGTH	8
-#define BCMILCP_BCM_SUBTYPEHDR_VERSION		0
-
-
-typedef BWL_PRE_PACKED_STRUCT struct bcmeth_hdr
+typedef enum pkt_frag
 {
-	uint16	subtype;	
-	uint16	length;
-	uint8	version;	
-	uint8	oui[3];		
-	
-	uint16	usr_subtype;
-} BWL_POST_PACKED_STRUCT bcmeth_hdr_t;
+	DHD_PKT_FRAG_NONE = 0,
+	DHD_PKT_FRAG_FIRST,
+	DHD_PKT_FRAG_CONT,
+	DHD_PKT_FRAG_LAST
+} pkt_frag_t;
 
+extern pkt_frag_t pkt_frag_info(osl_t *osh, void *p);
 
-
-#include <packed_section_end.h>
-
-#endif	
+#endif /* _dhd_ip_h_ */
