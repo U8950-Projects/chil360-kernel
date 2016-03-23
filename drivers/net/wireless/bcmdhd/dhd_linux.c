@@ -739,7 +739,7 @@ static int dhd_process_cid_mac(dhd_pub_t *dhdp, bool prepost)
 #endif /* CUSTOMER_HW10 */
 
 	if (prepost) { /* pre process */
-	    dhd_read_macaddr(dhd, &dhd->pub.mac);
+		dhd_read_macaddr(dhd);
 	} else { /* post process */
 		dhd_write_macaddr(&dhd->pub.mac);
 	}

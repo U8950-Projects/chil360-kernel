@@ -12,11 +12,6 @@ DHDCFLAGS += -Wall -Wstrict-prototypes -DLINUX -DBCMDRIVER                  \
 	-Idrivers/net/wireless/bcmdhd -Idrivers/net/wireless/bcmdhd/include \
 	-Idrivers/net/wireless/bcmdhd/common/include
 
-
-
-
-
-
 DHDCFLAGS += -DCUSTOMER_HW2
 DHDCFLAGS += -DWL_CFG80211
 
@@ -31,28 +26,16 @@ DHDCFLAGS += -DWL_SCB_TIMEOUT=10
 # For TDLS tear down inactive time 10 sec
 
 
-
-
-
-
-
-
-
 # Roaming
 DHDCFLAGS += -DROAM_ENABLE
-
-
 
 # CCX
 ifeq ($(CONFIG_BRCM_CCX),y)
   DHDCFLAGS += -DBCMCCX
 endif
 
-
 # For Scan result patch
 DHDCFLAGS += -DESCAN_RESULT_PATCH
-
-
 
 ifneq ($(CONFIG_DHD_USE_SCHED_SCAN),)
 DHDCFLAGS += -DWL_SCHED_SCAN
@@ -66,11 +49,8 @@ DHDCFLAGS += -DSUPPORT_PM2_ONLY
 DHDCFLAGS += -DGET_CUSTOM_MAC_ENABLE
 DHDCFLAGS += -DCUSTOM_PNO_EVENT_LOCK_xTIME=10
 
-
-
 #DHDCFLAGS += -DSUPPORT_MULTIPLE_REVISION
 #DHDCFLAGS += -DSUPPORT_MULTIPLE_CHIPS
-
 
 #DHDCFLAGS += -DPLATFORM_MPS -DCUSTOM_OOB_GPIO_NUM=102
 DHDCFLAGS += -DPLATFORM_MPS
@@ -89,9 +69,6 @@ DHDCFLAGS += -DWL_CFG80211_STA_EVENT
 # To support p2p private command on kernel 3.8 or above
 DHDCFLAGS += -DWL_NEWCFG_PRIVCMD_SUPPORT
 
-
-
-
 #########################
 # Chip dependent feature
 #########################
@@ -101,7 +78,6 @@ ifneq ($(CONFIG_BCM4330),)
   DHDCFLAGS += -DMCAST_LIST_ACCUMULATION
   DHDCFLAGS += -DCUSTOM_GLOM_SETTING=0
   DHDCFLAGS += -DWL_CFG80211_GON_COLLISION
-  DHDCFLAGS += -DREAD_MACADDR  
 
   # Remove common feature for BCM4330
   DHDCFLAGS :=$(filter-out -DSUPPORT_AMPDU_MPDU_CMD,$(DHDCFLAGS))
@@ -111,7 +87,6 @@ ifneq ($(CONFIG_BCM4330),)
   DHDCFLAGS :=$(filter-out -DDHD_USE_IDLECOUNT,$(DHDCFLAGS))
 endif
 
-
 ifneq ($(CONFIG_BCM43341),)
 $(info bcmdhd: Compiling for 43341 chip)
   DHDCFLAGS += -DBCM43341_CHIP
@@ -119,9 +94,6 @@ $(info bcmdhd: Compiling for 43341 chip)
   DHDCFLAGS += -DCUSTOM_GLOM_SETTING=5
   DHDCFLAGS += -DPROP_TXSTATUS_VSDB
 endif
-
-
-
 
 ifneq ($(CONFIG_BCM4334),)
 $(info bcmdhd: Compiling for 4334 chip)
@@ -131,7 +103,6 @@ $(info bcmdhd: Compiling for 4334 chip)
   DHDCFLAGS += -DWES_SUPPORT
   DHDCFLAGS += -DSUPPORT_WL_TXPOWER
 endif
-
 
 ifneq ($(CONFIG_BCM43241),)
 $(info bcmdhd: Compiling for 43241 chip)
