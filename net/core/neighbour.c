@@ -1166,11 +1166,7 @@ int neigh_update(struct neighbour *neigh, const u8 *lladdr, u8 new,
 	if (new != old) {
 		neigh_del_timer(neigh);
 		if (new & NUD_PROBE)
-<<<<<<< HEAD
 		atomic_set(&neigh->probes, 0);
-=======
-			atomic_set(&neigh->probes, 0);
->>>>>>> 70cdd082f4cb3a41f23b4dd68401952bfced6838
 		if (new & NUD_IN_TIMER)
 			neigh_add_timer(neigh, (jiffies +
 						((new & NUD_REACHABLE) ?
