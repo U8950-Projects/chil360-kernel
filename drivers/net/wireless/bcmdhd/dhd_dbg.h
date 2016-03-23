@@ -1,7 +1,7 @@
 /*
  * Debug/trace/assert driver definitions for Dongle Host Driver.
  *
- * Copyright (C) 1999-2012, Broadcom Corporation
+ * Copyright (C) 1999-2014, Broadcom Corporation
  * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: dhd_dbg.h 353490 2012-08-27 21:10:02Z $
+ * $Id: dhd_dbg.h 419132 2013-08-19 21:33:05Z $
  */
 
 #ifndef _dhd_dbg_
@@ -47,6 +47,7 @@
 #define DHD_ISCAN(args)		do {if (dhd_msg_level & DHD_ISCAN_VAL) printf args;} while (0)
 #define DHD_ARPOE(args)		do {if (dhd_msg_level & DHD_ARPOE_VAL) printf args;} while (0)
 #define DHD_REORDER(args)	do {if (dhd_msg_level & DHD_REORDER_VAL) printf args;} while (0)
+#define DHD_PNO(args)		do {if (dhd_msg_level & DHD_PNO_VAL) printf args;} while (0)
 
 #define DHD_TRACE_HW4	DHD_TRACE
 
@@ -65,26 +66,27 @@
 #define DHD_ISCAN_ON()		(dhd_msg_level & DHD_ISCAN_VAL)
 #define DHD_ARPOE_ON()		(dhd_msg_level & DHD_ARPOE_VAL)
 #define DHD_REORDER_ON()	(dhd_msg_level & DHD_REORDER_VAL)
+#define DHD_NOCHECKDIED_ON()	(dhd_msg_level & DHD_NOCHECKDIED_VAL)
+#define DHD_PNO_ON()		(dhd_msg_level & DHD_PNO_VAL)
 
 #else /* defined(BCMDBG) || defined(DHD_DEBUG) */
 
 #define DHD_ERROR(args)		do {if (USE_NET_RATELIMIT) printf args;} while (0)
-/*porting,WIFI Module,20111110 begin++ */
-#define DHD_TRACE(args)		do {if (dhd_msg_level & DHD_TRACE_VAL) printf args;} while (0)
-#define DHD_INFO(args)		do {if (dhd_msg_level & DHD_INFO_VAL) printf args;} while (0)
-#define DHD_DATA(args)		do {if (dhd_msg_level & DHD_DATA_VAL) printf args;} while (0)
-#define DHD_CTL(args)		do {if (dhd_msg_level & DHD_CTL_VAL) printf args;} while (0)
-#define DHD_TIMER(args)		do {if (dhd_msg_level & DHD_TIMER_VAL) printf args;} while (0)
-#define DHD_HDRS(args)		do {if (dhd_msg_level & DHD_HDRS_VAL) printf args;} while (0)
-#define DHD_BYTES(args)		do {if (dhd_msg_level & DHD_BYTES_VAL) printf args;} while (0)
-#define DHD_INTR(args)		do {if (dhd_msg_level & DHD_INTR_VAL) printf args;} while (0)
-#define DHD_GLOM(args)		do {if (dhd_msg_level & DHD_GLOM_VAL) printf args;} while (0)
-#define DHD_EVENT(args)		do {if (dhd_msg_level & DHD_EVENT_VAL) printf args;} while (0)
-#define DHD_BTA(args)		do {if (dhd_msg_level & DHD_BTA_VAL) printf args;} while (0)
-#define DHD_ISCAN(args)		do {if (dhd_msg_level & DHD_ISCAN_VAL) printf args;} while (0)
-/*porting,WIFI Module,20111110 end-- */
+#define DHD_TRACE(args)
+#define DHD_INFO(args)
+#define DHD_DATA(args)
+#define DHD_CTL(args)
+#define DHD_TIMER(args)
+#define DHD_HDRS(args)
+#define DHD_BYTES(args)
+#define DHD_INTR(args)
+#define DHD_GLOM(args)
+#define DHD_EVENT(args)
+#define DHD_BTA(args)
+#define DHD_ISCAN(args)
 #define DHD_ARPOE(args)
 #define DHD_REORDER(args)
+#define DHD_PNO(args)
 
 #define DHD_TRACE_HW4	DHD_TRACE
 
@@ -103,6 +105,9 @@
 #define DHD_ISCAN_ON()		0
 #define DHD_ARPOE_ON()		0
 #define DHD_REORDER_ON()	0
+#define DHD_NOCHECKDIED_ON()	0
+#define DHD_PNO_ON()		0
+
 #endif 
 
 #define DHD_LOG(args)

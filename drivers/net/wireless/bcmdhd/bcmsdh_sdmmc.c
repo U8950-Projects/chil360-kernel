@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmsdh_sdmmc.c 362913 2012-10-15 11:26:11Z $
+ * $Id: bcmsdh_sdmmc.c 396586 2013-04-13 08:54:51Z $
  */
 #include <typedefs.h>
 
@@ -525,6 +525,20 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
 		/* Now set it */
 		si->client_block_size[func] = blksize;
 
+#if defined(CUSTOMER_HW4) && defined(USE_DYNAMIC_F2_BLKSIZE)
+		if (gInstance == NULL || gInstance->func[func] == NULL) {
+			sd_err(("%s: SDIO Device not present\n", __FUNCTION__));
+			bcmerror = BCME_NORESOURCE;
+			break;
+		}
+		sdio_claim_host(gInstance->func[func]);
+		bcmerror = sdio_set_block_size(gInstance->func[func], blksize);
+		if (bcmerror) {
+			sd_err(("%s: Failed to set F%d blocksize to %d\n", __FUNCTION__, func,
+				blksize));
+		}
+		sdio_release_host(gInstance->func[func]);
+#endif /* CUSTOMER_HW4 && USE_DYNAMIC_F2_BLKSIZE */
 		break;
 	}
 
@@ -816,6 +830,10 @@ sdioh_request_byte(sdioh_info_t *sd, uint rw, uint func, uint regaddr, uint8 *by
 #if defined(MMC_SDIO_ABORT)
 			/* to allow abort command through F1 */
 			else if (regaddr == SDIOD_CCCR_IOABORT) {
+				/* Because of SDIO3.0 host issue on Manta,
+				  * sometimes the abort fails.
+				  * Retrying again will fix this issue.
+				  */
 				while (sdio_abort_retry--) {
 					if (gInstance->func[func]) {
 						sdio_claim_host(gInstance->func[func]);
@@ -866,8 +884,9 @@ sdioh_request_byte(sdioh_info_t *sd, uint rw, uint func, uint regaddr, uint8 *by
 	}
 
 	if (err_ret) {
-		sd_err(("bcmsdh_sdmmc: Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
-		                        rw ? "Write" : "Read", func, regaddr, *byte, err_ret));
+		if (regaddr != 0x1001F && err_ret != -110)
+			sd_err(("bcmsdh_sdmmc: Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
+				rw ? "Write" : "Read", func, regaddr, *byte, err_ret));
 	}
 
 	return ((err_ret == 0) ? SDIOH_API_RC_SUCCESS : SDIOH_API_RC_FAIL);
@@ -1074,9 +1093,13 @@ sdioh_request_packet(sdioh_info_t *sd, uint fix_inc, uint write, uint func,
 			 */
 			if (write == 0 || pkt_len < 32)
 				pkt_len = (pkt_len + 3) & 0xFFFFFFFC;
-			else if (pkt_len % blk_size)
+			else if ((pkt_len > blk_size) && (pkt_len % blk_size))
 				pkt_len += blk_size - (pkt_len % blk_size);
 
+#if defined(CUSTOMER_HW4) && defined(USE_DYNAMIC_F2_BLKSIZE)
+			if (write && pkt_len > 64 && (pkt_len % 64) == 32)
+				pkt_len += 32;
+#endif /* CUSTOMER_HW4 && USE_DYNAMIC_F2_BLKSIZE */
 #ifdef CONFIG_MMC_MSM7X00A
 			if ((pkt_len % 64) == 32) {
 				sd_trace(("%s: Rounding up TX packet +=32\n", __FUNCTION__));
