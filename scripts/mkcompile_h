@@ -38,7 +38,8 @@ else
 fi
 
 if [ -z "$KBUILD_BUILD_TIMESTAMP" ]; then
-	TIMESTAMP=`date`
+	TIMESTAMP=$(echo `date` | sed -e 's/+07/ALEYSK/g')
+	vecho "  TMSTMP  $TIMESTAMP"
 else
 	TIMESTAMP=$KBUILD_BUILD_TIMESTAMP
 fi
