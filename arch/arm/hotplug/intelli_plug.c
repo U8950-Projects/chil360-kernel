@@ -656,3 +656,4 @@ MODULE_DESCRIPTION("'intell_plug' - An intelligent cpu hotplug driver for "
 MODULE_LICENSE("GPL");
 
 late_initcall(intelli_plug_init);
+
