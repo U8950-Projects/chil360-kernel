@@ -241,7 +241,7 @@ struct platform_device msm7x27aa_device_acpuclk = {
 
 static struct acpuclk_pdata msm8625_acpuclk_pdata = {
 	/* TODO: Need to update speed delta from H/w Team */
-	.max_speed_delta_khz = 604800,
+	.max_speed_delta_khz = 709000,
 };
 
 static struct acpuclk_pdata msm8625ab_acpuclk_pdata = {
@@ -888,13 +888,21 @@ static struct resource kgsl_3d0_resources[] = {
 };
 
 static struct kgsl_device_platform_data kgsl_3d0_pdata = {
-	.pwrlevel = {
+ 	.pwrlevel = {
 		{
-			.gpu_freq = 300000000,
+			.gpu_freq = 400000000,
 			.bus_freq = 200000000,
 		},
 		{
-			.gpu_freq = 266000000,
+			.gpu_freq = 350000000,
+			.bus_freq = 200000000,
+		},
+		{
+			.gpu_freq = 320000000,
+			.bus_freq = 200000000,
+		},
+		{
+			.gpu_freq = 300000000,
 			.bus_freq = 200000000,
 		},
 		{
@@ -911,7 +919,7 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 		},
 	},
 	.init_level = 0,
-	.num_levels = 5,
+	.num_levels = 4,
 	.set_grp_async = set_grp_xbar_async,
 	.idle_timeout = HZ,
 	.strtstp_sleepwake = true,
@@ -941,16 +949,25 @@ void __init msm7x25a_kgsl_3d0_init(void)
 }
 
 void __init msm8x25_kgsl_3d0_init(void)
-{
-	if (cpu_is_msm8625()) {
-		kgsl_3d0_pdata.idle_timeout = HZ/5;
-		kgsl_3d0_pdata.strtstp_sleepwake = false;
+ {
+ 	if (cpu_is_msm8625()) {
+ 		kgsl_3d0_pdata.idle_timeout = HZ/5;
+ 		kgsl_3d0_pdata.strtstp_sleepwake = false;
 
-		/* 8x25 supports a higher GPU frequency */
-		kgsl_3d0_pdata.pwrlevel[0].gpu_freq = 320000000;
-		kgsl_3d0_pdata.pwrlevel[0].bus_freq = 200000000;
-	}
-}
+/**
+ * NOTE: removed for overclocking
+*/
+#if 0 
+ 		if (SOCINFO_VERSION_MAJOR(socinfo_get_version()) >= 2)
+ 			/* 8x25 v2.0 & above supports a higher GPU frequency */
+ 			kgsl_3d0_pdata.pwrlevel[0].gpu_freq = 320000000;
+ 		else
+ 			kgsl_3d0_pdata.pwrlevel[0].gpu_freq = 300000000;
+ 
+ 		kgsl_3d0_pdata.pwrlevel[0].bus_freq = 200000000;
+#endif /* removed for overclocking */
+ 	}
+ }
 
 static void __init msm_register_device(struct platform_device *pdev, void *data)
 {
