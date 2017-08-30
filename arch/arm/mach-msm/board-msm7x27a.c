@@ -1005,6 +1005,7 @@ static void __init reserve_ion_memory(void)
         msm7x27a_reserve_table[MEMTYPE_EBI1].size +=
 		msm_ion_camera_size_carving;
 	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += 1;	
 #endif
 }
 
