@@ -9,3 +9,8 @@ config BCMDHD
 
 	  If you choose to build a module, it'll be called dhd. Say M if
 	  unsure.
+	  
+config DHD_USE_STATIC_BUF
+	bool "Use static buff of osl_malloc"
+	default n
+	depends on BCMDHD
