@@ -3446,7 +3446,7 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 #if !defined(WL_CFG80211)
 	uint up = 0;
 #endif /* !defined(WL_CFG80211) */
-	uint power_mode = PM_FAST;
+	uint power_mode = PM_OFF; /* PM_FAST */
 	uint32 dongle_align = DHD_SDALIGN;
 	uint32 glom = CUSTOM_GLOM_SETTING;
 #if defined(VSDB) || defined(ROAM_ENABLE)
