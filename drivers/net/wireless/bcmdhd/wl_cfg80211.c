@@ -3449,7 +3449,7 @@ wl_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
 	/* android has special hooks to change pm when kernel suspended */
 	pm = enabled ? ((dhd->in_suspend) ? PM_MAX : PM_FAST) : PM_OFF;
 #else
-	pm = enabled ? PM_FAST : PM_OFF;
+	pm = PM_OFF; /* enabled ? PM_FAST : PM_OFF; */
 #endif /* SUPPORT_PM2_ONLY */
 
 	if (_net_info->pm_block || wl->vsdb_mode) {
