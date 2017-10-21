@@ -39,9 +39,9 @@
 
 /*
  * Reserve enough v4l2 space for a double buffered full screen
- * res image (864x480x1.5x2)
+ * res image (544x960x1.5x2)
  */
-#define MSM_V4L2_VIDEO_OVERLAY_BUF_SIZE 1244160
+#define MSM_V4L2_VIDEO_OVERLAY_BUF_SIZE 1566720
 
 static unsigned fb_size = MSM_FB_SIZE;
 static int __init fb_size_setup(char *p)
