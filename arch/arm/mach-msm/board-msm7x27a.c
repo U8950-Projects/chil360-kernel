@@ -89,7 +89,7 @@ static ssize_t  buf_vkey_size=0;
 #define CAMERA_HEAP_TYPE ION_HEAP_TYPE_CARVEOUT
 #endif
 
-#define PMEM_KERNEL_EBI1_SIZE	0x3A000
+#define RESERVE_KERNEL_EBI1_SIZE	0x3A000
 #define MSM_RESERVE_AUDIO_SIZE	0x1F4000
 
 #if defined(CONFIG_GPIO_SX150X)
@@ -876,7 +876,7 @@ static void fix_sizes(void)
 	if (get_ddr_size() > SZ_512M)
 		reserve_adsp_size = CAMERA_ZSL_SIZE;
 #ifdef CONFIG_ION_MSM
-	msm_ion_audio_size = (MSM_PMEM_AUDIO_SIZE + PMEM_KERNEL_EBI1_SIZE);
+	msm_ion_audio_size = (MSM_RESERVE_AUDIO_SIZE + RESERVE_KERNEL_EBI1_SIZE);
 	msm_ion_sf_size = reserve_mdp_size;
 #ifdef CONFIG_CMA
         if (get_ddr_size() > SZ_256M)
@@ -1062,8 +1062,6 @@ extern unsigned long get_mempools_pstart_addr(void);
 static void __init msm7x27a_reserve(void)
 {
 	reserve_info = &msm7x27a_reserve_info;
-        memblock_remove(MSM8625_NON_CACHE_MEM, SZ_2K);
-        memblock_remove(BOOTLOADER_BASE_ADDR, msm_ion_audio_size);
 	msm_reserve();
 #ifdef CONFIG_CMA
 	dma_declare_contiguous(
