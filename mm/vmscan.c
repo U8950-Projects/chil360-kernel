@@ -704,7 +704,7 @@ static enum page_references page_check_references(struct page *page,
 
 	/* Reclaim if clean, defer dirty pages to writeback */
 	if (referenced_page && !PageSwapBacked(page))
-		return PAGEREF_RECLAIM_CLEAN;
+		return PAGEREF_RECLAIM;
 
 	return PAGEREF_RECLAIM;
 }
@@ -978,6 +978,8 @@ unsigned long reclaim_clean_pages_from_list(struct zone *zone,
 		.gfp_mask = GFP_KERNEL,
 		.priority = DEF_PRIORITY,
 		.may_unmap = 1,
+		/* Doesn't allow to write out dirty page */
+		.may_writepage = 0,
 	};
 	unsigned long ret, dummy1, dummy2;
 	struct page *page, *next;
