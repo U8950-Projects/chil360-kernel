@@ -982,10 +982,8 @@ static void __init reserve_ion_memory(void)
 {
 #if defined(CONFIG_ION_MSM) && defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
 	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_audio_size;
-        msm7x27a_reserve_table[MEMTYPE_EBI1].size +=
-		msm_ion_camera_size_carving;
+        msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_camera_size_carving;
 	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += 1;	
 #endif
 }
 
