@@ -889,11 +889,6 @@ static struct ion_co_heap_pdata co_ion_pdata = {
 	.align = PAGE_SIZE,
 };
 
-static struct ion_co_heap_pdata co_mm_ion_pdata = {
-	.adjacent_mem_id = INVALID_HEAP_ID,
-	.align = PAGE_SIZE,
-};
-
 static u64 msm_dmamask = DMA_BIT_MASK(32);
 
 static struct platform_device ion_cma_device = {
@@ -923,24 +918,26 @@ struct ion_platform_heap msm7x27a_heaps[] = {
 			.type	= CAMERA_HEAP_TYPE,
 			.name	= ION_CAMERA_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
-			.extra_data = (void *)&co_mm_ion_pdata,
+			.extra_data = (void *)&co_ion_pdata,
 			.priv	= (void *)&ion_cma_device.dev,
 		},
 		/* AUDIO HEAP 1*/
 		{
 			.id	= ION_AUDIO_HEAP_ID,
-			.type	= ION_HEAP_TYPE_CARVEOUT,
+			.type	= ION_HEAP_TYPE_DMA,
 			.name	= ION_AUDIO_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *)&co_ion_pdata,
+			.priv	= (void *)&ion_cma_device.dev,
 		},
 		/* ION_MDP = SF */
 		{
 			.id	= ION_SF_HEAP_ID,
-			.type	= ION_HEAP_TYPE_CARVEOUT,
+			.type	= ION_HEAP_TYPE_DMA,
 			.name	= ION_SF_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *)&co_ion_pdata,
+			.priv	= (void *)&ion_cma_device.dev,
 		},
 #endif
 };
@@ -973,17 +970,19 @@ static void __init size_ion_devices(void)
 {
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 	ion_pdata.heaps[1].size = msm_ion_camera_size;
-	ion_pdata.heaps[2].size = msm_ion_audio_size;
+	ion_pdata.heaps[2].size = RESERVE_KERNEL_EBI1_SIZE;
 	ion_pdata.heaps[3].size = msm_ion_sf_size;
+	ion_pdata.heaps[4].size = msm_ion_audio_size;
 #endif
 }
 
 static void __init reserve_ion_memory(void)
 {
 #if defined(CONFIG_ION_MSM) && defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_audio_size;
-        msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_camera_size_carving;
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
+//	msm7x27a_reserve_table[MEMTYPE_EBI1].size += RESERVE_KERNEL_EBI1_SIZE;
+//        msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_camera_size_carving;
+//	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += 1;
 #endif
 }
 
@@ -1051,15 +1050,20 @@ extern unsigned long get_mempools_pstart_addr(void);
 
 static void __init msm7x27a_reserve(void)
 {
+	unsigned int cma_total_size = 0;
+
 	reserve_info = &msm7x27a_reserve_info;
 	msm_reserve();
-#ifdef CONFIG_CMA
+
+	cma_total_size += msm_ion_camera_size;
+	cma_total_size += RESERVE_KERNEL_EBI1_SIZE;
+	cma_total_size += msm_ion_sf_size;
+	cma_total_size += msm_ion_audio_size;
 	dma_declare_contiguous(
 			&ion_cma_device.dev,
 			msm_ion_camera_size,
 			CAMERA_HEAP_BASE,
-			0x30000000);
-#endif
+			0x26000000);
 
 #ifdef CONFIG_SRECORDER_MSM
     if (0x0 != get_mempools_pstart_addr())
