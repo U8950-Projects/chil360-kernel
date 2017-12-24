@@ -1055,7 +1055,7 @@ static void __init msm7x27a_reserve(void)
 	reserve_info = &msm7x27a_reserve_info;
 	msm_reserve();
 
-	cma_total_size += msm_ion_camera_size;
+//	cma_total_size += msm_ion_camera_size;
 	cma_total_size += RESERVE_KERNEL_EBI1_SIZE;
 	cma_total_size += msm_ion_sf_size;
 	cma_total_size += msm_ion_audio_size;
@@ -1063,7 +1063,7 @@ static void __init msm7x27a_reserve(void)
 			&ion_cma_device.dev,
 			msm_ion_camera_size,
 			CAMERA_HEAP_BASE,
-			0x26000000);
+			0x30000000);
 
 #ifdef CONFIG_SRECORDER_MSM
     if (0x0 != get_mempools_pstart_addr())
