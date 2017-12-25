@@ -90,7 +90,7 @@ static ssize_t  buf_vkey_size=0;
 #endif
 
 #define RESERVE_KERNEL_EBI1_SIZE	0x3A000
-#define MSM_RESERVE_AUDIO_SIZE	0x1F4000
+#define MSM_RESERVE_AUDIO_SIZE	0x200000
 
 #if defined(CONFIG_GPIO_SX150X)
 enum {
@@ -868,7 +868,7 @@ static void fix_sizes(void)
 	if (get_ddr_size() > SZ_512M)
 		reserve_adsp_size = CAMERA_ZSL_SIZE;
 #ifdef CONFIG_ION_MSM
-	msm_ion_audio_size = (MSM_RESERVE_AUDIO_SIZE + RESERVE_KERNEL_EBI1_SIZE);
+	msm_ion_audio_size = MSM_RESERVE_AUDIO_SIZE;
 	msm_ion_sf_size = reserve_mdp_size;
 #ifdef CONFIG_CMA
         if (get_ddr_size() > SZ_256M)
