@@ -262,7 +262,7 @@ static struct msm_i2c_platform_data msm_gsbi1_qup_i2c_pdata = {
 
 #ifdef CONFIG_ARCH_MSM7X27A
 #define MSM_RESERVE_MDP_SIZE       0x3F00000
-#define MSM_RESERVE_ADSP_SIZE      0x3C00000
+#define MSM_RESERVE_ADSP_SIZE      0x2C00000
 #define CAMERA_ZSL_SIZE		(SZ_1M * 60)
 #endif
 
@@ -449,29 +449,29 @@ static struct msm_pm_platform_data msm7x27a_pm_data[MSM_PM_SLEEP_MODE_NR] = {
 					.suspend_supported = 1,
 					.idle_enabled = 1,
 					.suspend_enabled = 1,
-					.latency = 16000,
-					.residency = 20000,
+					.latency = 8594,
+					.residency = 23740,
 	},
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_NO_XO_SHUTDOWN)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
 					.idle_enabled = 1,
 					.suspend_enabled = 1,
-					.latency = 12000,
-					.residency = 20000,
+					.latency = 4594,
+					.residency = 23740,
 	},
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
 					.idle_enabled = 0,
 					.suspend_enabled = 1,
-					.latency = 2000,
-					.residency = 0,
+					.latency = 443,
+					.residency = 1098,
 	},
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 1,
+					.idle_enabled = 0,
 					.suspend_enabled = 1,
 					.latency = 2,
 					.residency = 0,
@@ -490,19 +490,19 @@ static struct msm_pm_platform_data
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_POWER_COLLAPSE)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 0,
-					.suspend_enabled = 0,
-					.latency = 16000,
-					.residency = 20000,
+					.idle_enabled = 1,
+					.suspend_enabled = 1,
+					.latency = 8594,
+					.residency = 23740,
 	},
 
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_NO_XO_SHUTDOWN)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 0,
-					.suspend_enabled = 0,
-					.latency = 12000,
-					.residency = 20000,
+					.idle_enabled = 1,
+					.suspend_enabled = 1,
+					.latency = 4594,
+					.residency = 23740,
 	},
 
 	/* picked latency & redisdency values from 7x30 */
@@ -518,10 +518,10 @@ static struct msm_pm_platform_data
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 1,
+					.idle_enabled = 0,
 					.suspend_enabled = 1,
 					.latency = 2,
-					.residency = 10,
+					.residency = 0,
 	},
 
 	/* picked latency & redisdency values from 7x30 */
@@ -537,10 +537,10 @@ static struct msm_pm_platform_data
 	[MSM_PM_MODE(1, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 1,
+					.idle_enabled = 0,
 					.suspend_enabled = 1,
 					.latency = 2,
-					.residency = 10,
+					.residency = 0,
 	},
 
 	/* picked latency & redisdency values from 7x30 */
@@ -575,10 +575,10 @@ static struct msm_pm_platform_data
 	[MSM_PM_MODE(3, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 1,
+					.idle_enabled = 0,
 					.suspend_enabled = 1,
 					.latency = 2,
-					.residency = 10,
+					.residency = 0,
 	},
 
 };
@@ -915,7 +915,7 @@ struct ion_platform_heap msm7x27a_heaps[] = {
 		/* ION_ADSP = CAMERA */
 		{
 			.id	= ION_CAMERA_HEAP_ID,
-			.type	= CAMERA_HEAP_TYPE,
+			.type	= ION_HEAP_TYPE_DMA,
 			.name	= ION_CAMERA_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *)&co_ion_pdata,
@@ -1055,14 +1055,14 @@ static void __init msm7x27a_reserve(void)
 	reserve_info = &msm7x27a_reserve_info;
 	msm_reserve();
 
-//	cma_total_size += msm_ion_camera_size;
+	cma_total_size += msm_ion_camera_size;
 	cma_total_size += RESERVE_KERNEL_EBI1_SIZE;
 	cma_total_size += msm_ion_sf_size;
 	cma_total_size += msm_ion_audio_size;
 	dma_declare_contiguous(
 			&ion_cma_device.dev,
-			msm_ion_camera_size,
-			CAMERA_HEAP_BASE,
+			cma_total_size,
+			0x0,
 			0x30000000);
 
 #ifdef CONFIG_SRECORDER_MSM
