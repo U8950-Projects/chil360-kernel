@@ -90,7 +90,7 @@ static ssize_t  buf_vkey_size=0;
 #endif
 
 #define RESERVE_KERNEL_EBI1_SIZE	0x3A000
-#define MSM_RESERVE_AUDIO_SIZE	0x200000
+#define MSM_RESERVE_AUDIO_SIZE	0xF0000
 
 #if defined(CONFIG_GPIO_SX150X)
 enum {
@@ -261,8 +261,8 @@ static struct msm_i2c_platform_data msm_gsbi1_qup_i2c_pdata = {
 };
 
 #ifdef CONFIG_ARCH_MSM7X27A
-#define MSM_RESERVE_MDP_SIZE       0x3F00000
-#define MSM_RESERVE_ADSP_SIZE      0x2C00000
+#define MSM_RESERVE_MDP_SIZE       0x2300000
+#define MSM_RESERVE_ADSP_SIZE      0x1200000
 #define CAMERA_ZSL_SIZE		(SZ_1M * 60)
 #endif
 
@@ -449,29 +449,29 @@ static struct msm_pm_platform_data msm7x27a_pm_data[MSM_PM_SLEEP_MODE_NR] = {
 					.suspend_supported = 1,
 					.idle_enabled = 1,
 					.suspend_enabled = 1,
-					.latency = 8594,
-					.residency = 23740,
+					.latency = 16000,
+					.residency = 20000,
 	},
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_NO_XO_SHUTDOWN)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
 					.idle_enabled = 1,
 					.suspend_enabled = 1,
-					.latency = 4594,
-					.residency = 23740,
+					.latency = 12000,
+					.residency = 20000,
 	},
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
 					.idle_enabled = 0,
 					.suspend_enabled = 1,
-					.latency = 443,
-					.residency = 1098,
+					.latency = 2000,
+					.residency = 0,
 	},
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 0,
+					.idle_enabled = 1,
 					.suspend_enabled = 1,
 					.latency = 2,
 					.residency = 0,
@@ -490,19 +490,19 @@ static struct msm_pm_platform_data
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_POWER_COLLAPSE)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 1,
-					.suspend_enabled = 1,
-					.latency = 8594,
-					.residency = 23740,
+					.idle_enabled = 0,
+					.suspend_enabled = 0,
+					.latency = 16000,
+					.residency = 20000,
 	},
 
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_NO_XO_SHUTDOWN)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 1,
-					.suspend_enabled = 1,
-					.latency = 4594,
-					.residency = 23740,
+					.idle_enabled = 0,
+					.suspend_enabled = 0,
+					.latency = 12000,
+					.residency = 20000,
 	},
 
 	/* picked latency & redisdency values from 7x30 */
@@ -512,48 +512,10 @@ static struct msm_pm_platform_data
 					.idle_enabled = 0,
 					.suspend_enabled = 0,
 					.latency = 500,
-					.residency = 500,
+					.residency = 6000,
 	},
 
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
-					.idle_supported = 1,
-					.suspend_supported = 1,
-					.idle_enabled = 0,
-					.suspend_enabled = 1,
-					.latency = 2,
-					.residency = 0,
-	},
-
-	/* picked latency & redisdency values from 7x30 */
-	[MSM_PM_MODE(1, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE)] = {
-					.idle_supported = 1,
-					.suspend_supported = 1,
-					.idle_enabled = 0,
-					.suspend_enabled = 0,
-					.latency = 500,
-					.residency = 500,
-	},
-
-	[MSM_PM_MODE(1, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
-					.idle_supported = 1,
-					.suspend_supported = 1,
-					.idle_enabled = 0,
-					.suspend_enabled = 1,
-					.latency = 2,
-					.residency = 0,
-	},
-
-	/* picked latency & redisdency values from 7x30 */
-	[MSM_PM_MODE(2, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE)] = {
-					.idle_supported = 1,
-					.suspend_supported = 1,
-					.idle_enabled = 0,
-					.suspend_enabled = 0,
-					.latency = 500,
-					.residency = 500,
-	},
-
-	[MSM_PM_MODE(2, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
 					.idle_enabled = 1,
@@ -563,22 +525,22 @@ static struct msm_pm_platform_data
 	},
 
 	/* picked latency & redisdency values from 7x30 */
-	[MSM_PM_MODE(3, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE)] = {
+	[MSM_PM_MODE(1, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
 					.idle_enabled = 0,
 					.suspend_enabled = 0,
 					.latency = 500,
-					.residency = 500,
+					.residency = 6000,
 	},
 
-	[MSM_PM_MODE(3, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
+	[MSM_PM_MODE(1, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
 					.idle_supported = 1,
 					.suspend_supported = 1,
-					.idle_enabled = 0,
+					.idle_enabled = 1,
 					.suspend_enabled = 1,
 					.latency = 2,
-					.residency = 0,
+					.residency = 10,
 	},
 
 };
@@ -979,9 +941,6 @@ static void __init size_ion_devices(void)
 static void __init reserve_ion_memory(void)
 {
 #if defined(CONFIG_ION_MSM) && defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
-//	msm7x27a_reserve_table[MEMTYPE_EBI1].size += RESERVE_KERNEL_EBI1_SIZE;
-//        msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_camera_size_carving;
-//	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
 	msm7x27a_reserve_table[MEMTYPE_EBI1].size += 1;
 #endif
 }
@@ -1063,7 +1022,7 @@ static void __init msm7x27a_reserve(void)
 			&ion_cma_device.dev,
 			cma_total_size,
 			0x0,
-			0x30000000);
+			0x26000000);
 
 #ifdef CONFIG_SRECORDER_MSM
     if (0x0 != get_mempools_pstart_addr())
