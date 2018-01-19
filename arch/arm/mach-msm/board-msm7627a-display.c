@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -26,15 +26,17 @@
 #include <mach/rpc_pmapp.h>
 #include "devices.h"
 #include "board-msm7627a.h"
-#include <linux/hardware_self_adapt.h>
+
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
 #define MSM_FB_SIZE		0x4BF000
 #define MSM7x25A_MSM_FB_SIZE    0x1C2000
 #define MSM8x25_MSM_FB_SIZE	0x5FA000
+#define MSM8x25Q_MSM_FB_SIZE	0xAC8000
 #else
 #define MSM_FB_SIZE		0x32A000
 #define MSM7x25A_MSM_FB_SIZE	0x12C000
 #define MSM8x25_MSM_FB_SIZE	0x3FC000
+#define MSM8x25Q_MSM_FB_SIZE	0x730000
 #endif
 
 /*
@@ -490,6 +492,7 @@ static struct resource msm_v4l2_video_overlay_resources[] = {
 #define LCDC_TOSHIBA_FWVGA_PANEL_NAME   "lcdc_toshiba_fwvga_pt"
 #define MIPI_CMD_RENESAS_FWVGA_PANEL_NAME       "mipi_cmd_renesas_fwvga"
 
+static struct mipi_dsi_platform_data mipi_dsi_pdata;
 static int msm_fb_detect_panel(const char *name)
 {
 	int ret = -ENODEV;
@@ -513,6 +516,14 @@ static int msm_fb_detect_panel(const char *name)
 			machine_is_msm8625_evt()) {
 		if (!strncmp(name, "mipi_cmd_nt35510_wvga", 21))
 			ret = 0;
+	} else if (machine_is_qrd_skud_prime()) {
+		if (!strncmp(name, "mipi_video_hx8389b_qhd", 22))
+			ret = 0;
+	} else if (machine_is_msm8625q_evbd() || machine_is_msm8625q_skud()) {
+		if (!strncmp(name, "mipi_video_hx8389b_qhd", 22)) {
+			mipi_dsi_pdata.dlane_swap = 0x0;
+			ret = 0;
+		}
 	}
 
 #if !defined(CONFIG_FB_MSM_LCDC_AUTO_DETECT) && \
@@ -720,6 +731,19 @@ static struct platform_device mipi_dsi_NT35510_panel_device = {
 	}
 };
 
+static struct msm_panel_common_pdata mipi_hx8389b_pdata = {
+	.backlight    = evb_backlight_control,
+	.rotate_panel = NULL,
+};
+
+static struct platform_device mipi_dsi_hx8389b_panel_device = {
+	.name = "mipi_hx8389b",
+	.id   = 0,
+	.dev  = {
+		.platform_data = &mipi_hx8389b_pdata,
+	}
+};
+
 static struct msm_panel_common_pdata mipi_NT35516_pdata = {
 	.backlight = evb_backlight_control,
 };
@@ -732,6 +756,17 @@ static struct platform_device mipi_dsi_NT35516_panel_device = {
 	}
 };
 
+static struct msm_panel_common_pdata mipi_NT35590_pdata = {
+	.backlight = evb_backlight_control,
+};
+
+static struct platform_device mipi_dsi_NT35590_panel_device = {
+	.name   = "mipi_NT35590",
+	.id     = 0,
+	.dev    = {
+		.platform_data = &mipi_NT35590_pdata,
+	}
+};
 static struct platform_device *msm_fb_devices[] __initdata = {
 	&msm_fb_device,
 	&lcdc_toshiba_panel_device,
@@ -759,22 +794,29 @@ static struct platform_device *evb_fb_devices[] __initdata = {
 	&mipi_dsi_NT35516_panel_device,
 };
 
+static struct platform_device *skud_fb_devices[] __initdata = {
+	&msm_fb_device,
+	&mipi_dsi_hx8389b_panel_device,
+	&mipi_dsi_NT35510_panel_device,
+	&mipi_dsi_NT35590_panel_device,
+};
+
 void __init msm_msm7627a_allocate_memory_regions(void)
 {
-	/*Add 4 framebuffer and delete the mem adapter strategy*/	
 	void *addr;
 	unsigned long fb_size;
-#ifndef CONFIG_HUAWEI_KERNEL
+
 	if (machine_is_msm7625a_surf() || machine_is_msm7625a_ffa())
 		fb_size = MSM7x25A_MSM_FB_SIZE;
 	else if (machine_is_msm7627a_evb() || machine_is_msm8625_evb()
-						|| machine_is_msm8625_evt())
+						|| machine_is_msm8625_evt()
+						|| machine_is_qrd_skud_prime())
 		fb_size = MSM8x25_MSM_FB_SIZE;
+	else if (machine_is_msm8625q_evbd() || machine_is_msm8625q_skud())
+		fb_size = MSM8x25Q_MSM_FB_SIZE;
 	else
 		fb_size = MSM_FB_SIZE;
-#else
-	fb_size = get_framebuffer_size();
-#endif
+
 	addr = alloc_bootmem_align(fb_size, 0x1000);
 	msm_fb_resources[0].start = __pa(addr);
 	msm_fb_resources[0].end = msm_fb_resources[0].start + fb_size - 1;
@@ -810,8 +852,7 @@ static char lcdc_splash_is_enabled()
 #define GPIO_LCDC_BRDG_RESET_N	129
 #define GPIO_LCD_DSI_SEL	125
 #define LCDC_RESET_PHYS		0x90008014
-/* We needn't go with this patch,with the same as G verson */
-#ifndef CONFIG_HUAWEI_KERNEL
+
 static  void __iomem *lcdc_reset_ptr;
 
 static unsigned mipi_dsi_gpio[] = {
@@ -825,7 +866,7 @@ static unsigned lcd_dsi_sel_gpio[] = {
 	GPIO_CFG(GPIO_LCD_DSI_SEL, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP,
 			GPIO_CFG_2MA),
 };
-#endif
+
 enum {
 	DSI_SINGLE_LANE = 1,
 	DSI_TWO_LANES,
@@ -844,8 +885,6 @@ static int msm_fb_get_lane_config(void)
 	return rc;
 }
 
-/* We needn't go with this patch,with the same as G verson */
-#ifndef CONFIG_HUAWEI_KERNEL
 static int msm_fb_dsi_client_msm_reset(void)
 {
 	int rc = 0;
@@ -989,6 +1028,27 @@ static int msm_fb_dsi_client_qrd3_reset(void)
 	return rc;
 }
 
+#define GPIO_SKUD_LCD_BRDG_RESET_N	78
+
+static unsigned skud_mipi_dsi_gpio[] = {
+	GPIO_CFG(GPIO_SKUD_LCD_BRDG_RESET_N, 0, GPIO_CFG_OUTPUT,
+			GPIO_CFG_NO_PULL,
+			GPIO_CFG_2MA), /* GPIO_SKUD_LCD_BRDG_RESET_N */
+};
+
+static int msm_fb_dsi_client_skud_reset(void)
+{
+	int rc = 0;
+
+	rc = gpio_request(GPIO_SKUD_LCD_BRDG_RESET_N, "skud_lcd_brdg_reset_n");
+	if (rc < 0) {
+		pr_err("failed to request skud lcd brdg reset_n\n");
+		return rc;
+	}
+
+	return rc;
+}
+
 static int msm_fb_dsi_client_reset(void)
 {
 	int rc = 0;
@@ -998,6 +1058,9 @@ static int msm_fb_dsi_client_reset(void)
 	else if (machine_is_msm7627a_evb() || machine_is_msm8625_evb()
 						|| machine_is_msm8625_evt())
 		rc = msm_fb_dsi_client_qrd3_reset();
+	else if (machine_is_qrd_skud_prime() || machine_is_msm8625q_evbd()
+				|| machine_is_msm8625q_skud())
+		rc = msm_fb_dsi_client_skud_reset();
 	else
 		rc = msm_fb_dsi_client_msm_reset();
 
@@ -1174,7 +1237,6 @@ static int mipi_dsi_panel_qrd1_power(int on)
 static int qrd3_dsi_gpio_initialized;
 static struct regulator *gpio_reg_2p85v, *gpio_reg_1p8v;
 
-/*patch from Qualcomm*/
 static int mipi_dsi_panel_qrd3_power(int on)
 {
 	int rc = 0;
@@ -1298,6 +1360,149 @@ static int mipi_dsi_panel_qrd3_power(int on)
 	return rc;
 }
 
+static int skud_dsi_gpio_initialized;
+static int mipi_dsi_panel_skud_power(int on)
+{
+	int rc = 0;
+
+	if (!skud_dsi_gpio_initialized) {
+		pmapp_disp_backlight_init();
+
+		skud_dsi_gpio_initialized = 1;
+
+		if (mdp_pdata.cont_splash_enabled) {
+			/*Configure LCD Bridge reset*/
+			rc = gpio_tlmm_config(skud_mipi_dsi_gpio[0],
+			     GPIO_CFG_ENABLE);
+			if (rc < 0) {
+				pr_err("Failed to enable LCD Bridge reset enable\n");
+				return rc;
+			}
+
+			rc = gpio_direction_output(GPIO_SKUD_LCD_BRDG_RESET_N,
+									1);
+
+			if (rc < 0) {
+				pr_err("Failed GPIO bridge Reset\n");
+				gpio_free(GPIO_SKUD_LCD_BRDG_RESET_N);
+				return rc;
+			}
+			return 0;
+		}
+	}
+
+	if (on) {
+		/*Configure LCD Bridge reset*/
+		rc = gpio_tlmm_config(skud_mipi_dsi_gpio[0], GPIO_CFG_ENABLE);
+		if (rc < 0) {
+			pr_err("Failed to enable LCD Bridge reset enable\n");
+			return rc;
+		}
+
+		rc = gpio_direction_output(GPIO_SKUD_LCD_BRDG_RESET_N, 1);
+
+		if (rc < 0) {
+			pr_err("Failed GPIO bridge Reset\n");
+			gpio_free(GPIO_SKUD_LCD_BRDG_RESET_N);
+			return rc;
+		}
+
+		/*Toggle Bridge Reset GPIO*/
+		msleep(20);
+		gpio_set_value_cansleep(GPIO_SKUD_LCD_BRDG_RESET_N, 0);
+		msleep(20);
+		gpio_set_value_cansleep(GPIO_SKUD_LCD_BRDG_RESET_N, 1);
+		msleep(20);
+
+	} else {
+		gpio_tlmm_config(GPIO_CFG(GPIO_SKUD_LCD_BRDG_RESET_N, 0,
+			GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+			GPIO_CFG_DISABLE);
+	}
+
+	return rc;
+}
+
+static int evbd_dsi_gpio_initialized;
+
+static int mipi_dsi_panel_evbd_power(int on)
+{
+	int rc = 0;
+
+	if (!evbd_dsi_gpio_initialized) {
+		pmapp_disp_backlight_init();
+
+		evbd_dsi_gpio_initialized = 1;
+
+		if (mdp_pdata.cont_splash_enabled) {
+			/*Configure LCD Bridge reset*/
+			rc = gpio_tlmm_config(skud_mipi_dsi_gpio[0],
+			     GPIO_CFG_ENABLE);
+			if (rc < 0) {
+				pr_err("Failed to enable LCD Bridge reset enable\n");
+				return rc;
+			}
+
+			rc = gpio_direction_output(GPIO_SKUD_LCD_BRDG_RESET_N,
+			     1);
+
+			if (rc < 0) {
+				pr_err("Failed GPIO bridge Reset\n");
+				gpio_free(GPIO_SKUD_LCD_BRDG_RESET_N);
+				return rc;
+			}
+			return 0;
+		}
+	}
+
+	if (on) {
+		/*Enable EXT_2.85 and 1.8 regulators*/
+		rc = regulator_enable(gpio_reg_2p85v);
+		if (rc < 0)
+			pr_err("%s: reg enable failed\n", __func__);
+		rc = regulator_enable(gpio_reg_1p8v);
+		if (rc < 0)
+			pr_err("%s: reg enable failed\n", __func__);
+
+		/*Configure LCD Bridge reset*/
+		rc = gpio_tlmm_config(skud_mipi_dsi_gpio[0], GPIO_CFG_ENABLE);
+		if (rc < 0) {
+			pr_err("Failed to enable LCD Bridge reset enable\n");
+			return rc;
+		}
+
+		rc = gpio_direction_output(GPIO_SKUD_LCD_BRDG_RESET_N, 1);
+
+		if (rc < 0) {
+			pr_err("Failed GPIO bridge Reset\n");
+			gpio_free(GPIO_SKUD_LCD_BRDG_RESET_N);
+			return rc;
+		}
+
+		/*Toggle Bridge Reset GPIO*/
+		msleep(20);
+		gpio_set_value_cansleep(GPIO_SKUD_LCD_BRDG_RESET_N, 0);
+		msleep(20);
+		gpio_set_value_cansleep(GPIO_SKUD_LCD_BRDG_RESET_N, 1);
+		msleep(20);
+
+	} else {
+		gpio_tlmm_config(GPIO_CFG(GPIO_SKUD_LCD_BRDG_RESET_N, 0,
+			GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+			GPIO_CFG_DISABLE);
+
+		rc = regulator_disable(gpio_reg_2p85v);
+		if (rc < 0)
+			pr_err("%s: reg disable failed\n", __func__);
+		rc = regulator_disable(gpio_reg_1p8v);
+		if (rc < 0)
+			pr_err("%s: reg disable failed\n", __func__);
+
+	}
+
+	return rc;
+}
+
 static char mipi_dsi_splash_is_enabled(void);
 static int mipi_dsi_panel_power(int on)
 {
@@ -1308,45 +1513,25 @@ static int mipi_dsi_panel_power(int on)
 	else if (machine_is_msm7627a_evb() || machine_is_msm8625_evb()
 						|| machine_is_msm8625_evt())
 		rc = mipi_dsi_panel_qrd3_power(on);
+	else if (machine_is_qrd_skud_prime() || machine_is_msm8625q_skud())
+		rc = mipi_dsi_panel_skud_power(on);
+	else if (machine_is_msm8625q_evbd())
+		rc = mipi_dsi_panel_evbd_power(on);
 	else
 		rc = mipi_dsi_panel_msm_power(on);
 	return rc;
 }
-#else
-/*copy some var or func declare to solve compile problem*/
-static char mipi_dsi_splash_is_enabled(void);
-static struct regulator *gpio_reg_2p85v, *gpio_reg_1p8v;
 
-static int dsi_gpio_initialized;
-static int msm_fb_dsi_client_reset(void)
-{
-	return 0;
-}
-
-static int mipi_dsi_panel_power(int on)
-{
-	if (!dsi_gpio_initialized) {	
-		if (get_hw_lcd_ctrl_bl_type() == CTRL_BL_BY_MSM)
-		{
-			pmapp_disp_backlight_init();
-		}
-		
-		dsi_gpio_initialized = 1;
-	}
-	return 0;
-}
-#endif
 #define MDP_303_VSYNC_GPIO 97
 
-#ifdef CONFIG_FB_MSM_MIPI_DSI
 static struct mipi_dsi_platform_data mipi_dsi_pdata = {
 	.vsync_gpio		= MDP_303_VSYNC_GPIO,
 	.dsi_power_save		= mipi_dsi_panel_power,
 	.dsi_client_reset       = msm_fb_dsi_client_reset,
 	.get_lane_config	= msm_fb_get_lane_config,
 	.splash_is_enabled	= mipi_dsi_splash_is_enabled,
+	.dlane_swap		= 0x1,
 };
-#endif
 
 static char mipi_dsi_splash_is_enabled(void)
 {
@@ -1382,7 +1567,14 @@ void msm7x27a_set_display_params(char *prim_panel)
 			strnlen("mipi_video_nt35510_wvga",
 				PANEL_NAME_MAX_LEN)))
 			disable_splash = 1;
+		else if (!(machine_is_msm7627a_evb() || machine_is_msm8625_evb()
+					|| machine_is_msm8625_evt()))
+			disable_splash = 1;
+
 	}
+
+	if (machine_is_msm8625q_evbd() || machine_is_msm8625q_skud())
+		mipi_dsi_pdata.dlane_swap = 0x0;
 }
 
 void __init msm_fb_add_devices(void)
@@ -1399,7 +1591,6 @@ void __init msm_fb_add_devices(void)
 		if (disable_splash)
 			mdp_pdata.cont_splash_enabled = 0x0;
 
-
 		platform_add_devices(evb_fb_devices,
 				ARRAY_SIZE(evb_fb_devices));
 	} else if (machine_is_msm7627a_qrd3() || machine_is_msm8625_qrd7()) {
@@ -1407,16 +1598,14 @@ void __init msm_fb_add_devices(void)
 		mdp_pdata.cont_splash_enabled = 0x0;
 		platform_add_devices(qrd3_fb_devices,
 						ARRAY_SIZE(qrd3_fb_devices));
-	} else {
-		/* mipi video mode need setting for support continuous splash */
-		if (get_hw_lcd_interface_type() == LCD_IS_MIPI_VIDEO)
-		{
-			mdp_pdata.cont_splash_enabled = 0x1;
-		}
-		else
-		{
+	} else if (machine_is_qrd_skud_prime() || machine_is_msm8625q_evbd()
+						|| machine_is_msm8625q_skud()) {
+		if (disable_splash)
 			mdp_pdata.cont_splash_enabled = 0x0;
-		}
+		platform_add_devices(skud_fb_devices,
+				ARRAY_SIZE(skud_fb_devices));
+	} else {
+		mdp_pdata.cont_splash_enabled = 0x0;
 		platform_add_devices(msm_fb_devices,
 				ARRAY_SIZE(msm_fb_devices));
 	}
@@ -1430,7 +1619,8 @@ void __init msm_fb_add_devices(void)
 	msm_fb_register_device("mipi_dsi", &mipi_dsi_pdata);
 #endif
 	if (machine_is_msm7627a_evb() || machine_is_msm8625_evb()
-					|| machine_is_msm8625_evt()) {
+		|| machine_is_msm8625_evt() || machine_is_msm8625q_evbd()) {
+
 		gpio_reg_2p85v = regulator_get(&mipi_dsi_device.dev,
 								"lcd_vdd");
 		if (IS_ERR(gpio_reg_2p85v))
