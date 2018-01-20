@@ -394,8 +394,8 @@ static struct clkctl_acpu_speed pll0_960_pll1_245_pll2_1200_pll4_1152[] = {
 	{ 1, 480000, ACPU_PLL_0, 4, 1, 60000, 3, 3, 122880 },
 	{ 0, 600000, ACPU_PLL_2, 2, 1, 75000, 3, 4, 160000 },
 	{ 1, 700800, ACPU_PLL_4, 6, 0, 87500, 3, 4, 160000, &pll4_cfg_tbl[0]},
-	{ 1, 1008000, ACPU_PLL_4, 6, 0, 126000, 3, 5, 200000, &pll4_cfg_tbl[1]},
-	{ 1, 1104000, ACPU_PLL_4, 6, 0, 151200, 3, 6, 200000, &pll4_cfg_tbl[5]},
+	{ 1, 1008000, ACPU_PLL_4, 6, 0, 106000, 3, 5, 200000, &pll4_cfg_tbl[1]},
+	{ 1, 1104000, ACPU_PLL_4, 6, 0, 116000, 3, 6, 200000, &pll4_cfg_tbl[5]},
 	{ 0 }
 };
 
@@ -1280,5 +1280,4 @@ static int __init acpuclk_7627_init(void)
 	return platform_driver_register(&acpuclk_7627_driver);
 }
 postcore_initcall(acpuclk_7627_init);
-
 
