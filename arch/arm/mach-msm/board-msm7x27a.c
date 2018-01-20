@@ -56,6 +56,9 @@
 #include "board-msm7x27a-regulator.h"
 #include "devices-msm7x2xa.h"
 #include "pm.h"
+#include <linux/if.h>
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
 #include <mach/rpc_server_handset.h>
 #include <mach/socinfo.h>
 #include "pm-boot.h"
@@ -1081,7 +1084,7 @@ static void __init msm7x27a_reserve(void)
 			&ion_cma_device.dev,
 			msm_ion_camera_size,
 			CAMERA_HEAP_BASE,
-			0x26000000);
+			0x30000000);
 #endif
 
 #ifdef CONFIG_SRECORDER_MSM
@@ -1461,6 +1464,69 @@ static void __init msm7x27a_pm_init(void)
 	msm_pm_register_irqs();
 }
 
+unsigned bt_mac_addr[IFHWADDRLEN];
+
+#ifdef CONFIG_PROC_FS
+static void *frag_start(struct seq_file *m, loff_t *pos)
+{
+	pg_data_t *pgdat;
+	loff_t node = *pos;
+	for (pgdat = first_online_pgdat();
+	     pgdat && node;
+	     pgdat = next_online_pgdat(pgdat))
+		--node;
+
+	return pgdat;
+}
+
+static void *frag_next(struct seq_file *m, void *arg, loff_t *pos)
+{
+	pg_data_t *pgdat = (pg_data_t *)arg;
+
+	(*pos)++;
+	return next_online_pgdat(pgdat);
+}
+
+static void frag_stop(struct seq_file *m, void *arg)
+{
+}
+
+static int bt_addr_file_show(struct seq_file *m, void *arg)
+{
+	seq_printf(m, "%02X:%02X:%02X:%02X:%02X:%02X\n",
+		bt_mac_addr[0], bt_mac_addr[1], bt_mac_addr[2],
+		bt_mac_addr[3], bt_mac_addr[4], bt_mac_addr[5]);
+	return 0;
+};
+
+static const struct seq_operations bt_addr_file_op = {
+	.start		= frag_start,
+	.next		= frag_next,
+	.stop		= frag_stop,
+	.show		= bt_addr_file_show,
+};
+
+static int bt_addr_file_open(struct inode *inode, struct file *file)
+{
+	return seq_open(file, &bt_addr_file_op);
+};
+
+static const struct file_operations bt_addr_file_ops = {
+	.open		= bt_addr_file_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= seq_release,
+};
+#endif
+
+static int __init bt_addr_proc_init(void)
+{
+#ifdef CONFIG_PROC_FS
+	proc_create("bt_mac_addr", S_IRUGO, NULL, &bt_addr_file_ops);
+#endif
+	return 0;
+}
+
 static void __init msm7x2x_init(void)
 {
 	msm7x2x_misc_init();
@@ -1487,6 +1553,7 @@ static void __init msm7x2x_init(void)
     /*before bt probe, config the bt_wake_msm gpio*/
     bt_wake_msm_config();
 #endif
+	bt_addr_proc_init();
 	msm7x27a_add_footswitch_devices();
 	msm7x27a_add_platform_devices();
 	/* Ensure ar6000pm device is registered before MMC/SDC */
@@ -1534,6 +1601,16 @@ static void __init msm7x2x_init_early(void)
 {
 	msm_msm7627a_allocate_memory_regions();
 }
+
+static int __init board_bt_addr_setup(char *btaddr)
+{
+	sscanf(btaddr, "%02X:%02X:%02X:%02X:%02X:%02X",
+		&bt_mac_addr[0], &bt_mac_addr[1], &bt_mac_addr[2],
+		&bt_mac_addr[3], &bt_mac_addr[4], &bt_mac_addr[5]);
+	return 1;
+};
+
+__setup("ro.bt.bdaddr_path", board_bt_addr_setup);
 
 MACHINE_START(MSM7X27A_RUMI3, "QCT MSM7x27a RUMI3")
 	.atag_offset	= 0x100,
