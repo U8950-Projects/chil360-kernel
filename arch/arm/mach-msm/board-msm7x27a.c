@@ -616,9 +616,9 @@ early_param("reserve_adsp_size", reserve_adsp_size_setup);
 static u32 msm_calculate_batt_capacity(u32 current_voltage);
 
 static struct msm_psy_batt_pdata msm_psy_batt_data = {
-	.voltage_min_design     = 3200,
+	.voltage_min_design     = 3330,
 	.voltage_max_design     = 4200,
-	.voltage_fail_safe      = 3340,
+	.voltage_fail_safe      = 3400,
 	.avail_chg_sources      = AC_CHG | USB_CHG ,
 	.batt_technology        = POWER_SUPPLY_TECHNOLOGY_LION,
 	.calculate_capacity     = &msm_calculate_batt_capacity,
@@ -880,7 +880,7 @@ static void fix_sizes(void)
 	if (get_ddr_size() > SZ_512M)
 		reserve_adsp_size = CAMERA_ZSL_SIZE;
 #ifdef CONFIG_ION_MSM
-	msm_ion_audio_size = MSM_RESERVE_AUDIO_SIZE;
+	msm_ion_audio_size = reserve_audio_size;
 	msm_ion_sf_size = reserve_mdp_size;
 #ifdef CONFIG_CMA
         if (get_ddr_size() > SZ_256M)
@@ -1013,7 +1013,6 @@ static void __init reserve_ion_memory(void)
 
 static void __init msm7x27a_calculate_reserve_sizes(void)
 {
-	fix_sizes();
 	size_ion_devices();
 	reserve_ion_memory();
 }
@@ -1075,6 +1074,7 @@ extern unsigned long get_mempools_pstart_addr(void);
 
 static void __init msm7x27a_reserve(void)
 {
+	fix_sizes();
 	reserve_info = &msm7x27a_reserve_info;
         memblock_remove(MSM8625_NON_CACHE_MEM, SZ_2K);
         memblock_remove(BOOTLOADER_BASE_ADDR, msm_ion_audio_size);
@@ -1104,10 +1104,12 @@ static void __init msm7x27a_reserve(void)
 
 static void __init msm8625_reserve(void)
 {
-	msm7x27a_reserve();
+	unsigned long sz = get_ddr_size();
+	pr_info("%s: DDR size = 0x%lx (%ld MB)\n", __func__, sz, sz/0x100000);
 	memblock_remove(MSM8625_CPU_PHYS, SZ_8);
 	memblock_remove(MSM8625_WARM_BOOT_PHYS, SZ_32);
 	memblock_remove(MSM8625_NON_CACHE_MEM, SZ_2K);
+	msm7x27a_reserve();
 }
 
 static void __init msm7x27a_device_i2c_init(void)
