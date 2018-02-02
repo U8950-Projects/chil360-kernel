@@ -56,6 +56,9 @@
 #include "board-msm7x27a-regulator.h"
 #include "devices-msm7x2xa.h"
 #include "pm.h"
+#include <linux/if.h>
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
 #include <mach/rpc_server_handset.h>
 #include <mach/socinfo.h>
 #include "pm-boot.h"
@@ -90,7 +93,8 @@ static ssize_t  buf_vkey_size=0;
 #endif
 
 #define RESERVE_KERNEL_EBI1_SIZE	0x3A000
-#define MSM_RESERVE_AUDIO_SIZE	0x200000
+#define MSM_RESERVE_AUDIO_SIZE	0xF0000
+#define BOOTLOADER_BASE_ADDR	0x10000
 
 #if defined(CONFIG_GPIO_SX150X)
 enum {
@@ -261,13 +265,16 @@ static struct msm_i2c_platform_data msm_gsbi1_qup_i2c_pdata = {
 };
 
 #ifdef CONFIG_ARCH_MSM7X27A
-#define MSM_RESERVE_MDP_SIZE       0x3F00000
-#define MSM_RESERVE_ADSP_SIZE      0x3C00000
+#define MSM_RESERVE_MDP_SIZE       0x2B00000
+#define MSM7x25A_MSM_RESERVE_MDP_SIZE       0x1500000
+
+#define MSM_RESERVE_ADSP_SIZE      0x2000000
+#define MSM7x25A_MSM_RESERVE_ADSP_SIZE      0xB91000
 #define CAMERA_ZSL_SIZE		(SZ_1M * 60)
 #endif
 
 #ifdef CONFIG_ION_MSM
-#define MSM_ION_HEAP_NUM        4
+#define MSM_ION_HEAP_NUM        5
 static struct platform_device ion_dev;
 static int msm_ion_camera_size;
 static int msm_ion_audio_size;
@@ -609,9 +616,9 @@ early_param("reserve_adsp_size", reserve_adsp_size_setup);
 static u32 msm_calculate_batt_capacity(u32 current_voltage);
 
 static struct msm_psy_batt_pdata msm_psy_batt_data = {
-	.voltage_min_design     = 3200,
-	.voltage_max_design     = 4300,
-	.voltage_fail_safe      = 3340,
+	.voltage_min_design     = 3330,
+	.voltage_max_design     = 4200,
+	.voltage_fail_safe      = 3400,
 	.avail_chg_sources      = AC_CHG | USB_CHG ,
 	.batt_technology        = POWER_SUPPLY_TECHNOLOGY_LION,
 	.calculate_capacity     = &msm_calculate_batt_capacity,
@@ -862,13 +869,18 @@ early_param("reserve_audio_size", reserve_audio_size_setup);
 
 static void fix_sizes(void)
 {
-	reserve_mdp_size = MSM_RESERVE_MDP_SIZE;
-	reserve_adsp_size = MSM_RESERVE_ADSP_SIZE;
+	if (machine_is_msm7625a_surf() || machine_is_msm7625a_ffa()) {
+		reserve_mdp_size = MSM7x25A_MSM_RESERVE_MDP_SIZE;
+		reserve_adsp_size = MSM7x25A_MSM_RESERVE_ADSP_SIZE;
+	} else {
+		reserve_mdp_size = MSM_RESERVE_MDP_SIZE;
+		reserve_adsp_size = MSM_RESERVE_ADSP_SIZE;
+	}
 /*delete qcom code */
 	if (get_ddr_size() > SZ_512M)
 		reserve_adsp_size = CAMERA_ZSL_SIZE;
 #ifdef CONFIG_ION_MSM
-	msm_ion_audio_size = MSM_RESERVE_AUDIO_SIZE;
+	msm_ion_audio_size = reserve_audio_size;
 	msm_ion_sf_size = reserve_mdp_size;
 #ifdef CONFIG_CMA
         if (get_ddr_size() > SZ_256M)
@@ -885,6 +897,11 @@ static void fix_sizes(void)
 #ifdef CONFIG_ION_MSM
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 static struct ion_co_heap_pdata co_ion_pdata = {
+	.adjacent_mem_id = INVALID_HEAP_ID,
+	.align = PAGE_SIZE,
+};
+
+static struct ion_co_heap_pdata co_mm_ion_pdata = {
 	.adjacent_mem_id = INVALID_HEAP_ID,
 	.align = PAGE_SIZE,
 };
@@ -918,27 +935,35 @@ struct ion_platform_heap msm7x27a_heaps[] = {
 			.type	= CAMERA_HEAP_TYPE,
 			.name	= ION_CAMERA_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
-			.extra_data = (void *)&co_ion_pdata,
+			.extra_data = (void *)&co_mm_ion_pdata,
 			.priv	= (void *)&ion_cma_device.dev,
 		},
 		/* AUDIO HEAP 1*/
 		{
 			.id	= ION_AUDIO_HEAP_ID,
-			.type	= ION_HEAP_TYPE_DMA,
+			.type	= ION_HEAP_TYPE_CARVEOUT,
 			.name	= ION_AUDIO_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *)&co_ion_pdata,
-			.priv	= (void *)&ion_cma_device.dev,
 		},
 		/* ION_MDP = SF */
 		{
 			.id	= ION_SF_HEAP_ID,
-			.type	= ION_HEAP_TYPE_DMA,
+			.type	= ION_HEAP_TYPE_CARVEOUT,
 			.name	= ION_SF_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *)&co_ion_pdata,
-			.priv	= (void *)&ion_cma_device.dev,
 		},
+		/* AUDIO HEAP 2*/
+		{
+			.id	= ION_AUDIO_HEAP_BL_ID,
+			.type	= ION_HEAP_TYPE_CARVEOUT,
+			.name	= ION_AUDIO_BL_HEAP_NAME,
+			.memory_type = ION_EBI_TYPE,
+			.extra_data = (void *)&co_ion_pdata,
+			.base = BOOTLOADER_BASE_ADDR,
+		},
+
 #endif
 };
 
@@ -972,23 +997,22 @@ static void __init size_ion_devices(void)
 	ion_pdata.heaps[1].size = msm_ion_camera_size;
 	ion_pdata.heaps[2].size = RESERVE_KERNEL_EBI1_SIZE;
 	ion_pdata.heaps[3].size = msm_ion_sf_size;
-	ion_pdata.heaps[4].size = msm_ion_audio_size;
+        ion_pdata.heaps[4].size = msm_ion_audio_size;
 #endif
 }
 
 static void __init reserve_ion_memory(void)
 {
 #if defined(CONFIG_ION_MSM) && defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
-//	msm7x27a_reserve_table[MEMTYPE_EBI1].size += RESERVE_KERNEL_EBI1_SIZE;
-//        msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_camera_size_carving;
-//	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += 1;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += RESERVE_KERNEL_EBI1_SIZE;
+        msm7x27a_reserve_table[MEMTYPE_EBI1].size +=
+		msm_ion_camera_size_carving;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
 #endif
 }
 
 static void __init msm7x27a_calculate_reserve_sizes(void)
 {
-	fix_sizes();
 	size_ion_devices();
 	reserve_ion_memory();
 }
@@ -1050,20 +1074,18 @@ extern unsigned long get_mempools_pstart_addr(void);
 
 static void __init msm7x27a_reserve(void)
 {
-	unsigned int cma_total_size = 0;
-
+	fix_sizes();
 	reserve_info = &msm7x27a_reserve_info;
+        memblock_remove(MSM8625_NON_CACHE_MEM, SZ_2K);
+        memblock_remove(BOOTLOADER_BASE_ADDR, msm_ion_audio_size);
 	msm_reserve();
-
-//	cma_total_size += msm_ion_camera_size;
-	cma_total_size += RESERVE_KERNEL_EBI1_SIZE;
-	cma_total_size += msm_ion_sf_size;
-	cma_total_size += msm_ion_audio_size;
+#ifdef CONFIG_CMA
 	dma_declare_contiguous(
 			&ion_cma_device.dev,
 			msm_ion_camera_size,
 			CAMERA_HEAP_BASE,
 			0x30000000);
+#endif
 
 #ifdef CONFIG_SRECORDER_MSM
     if (0x0 != get_mempools_pstart_addr())
@@ -1082,10 +1104,12 @@ static void __init msm7x27a_reserve(void)
 
 static void __init msm8625_reserve(void)
 {
-	msm7x27a_reserve();
+	unsigned long sz = get_ddr_size();
+	pr_info("%s: DDR size = 0x%lx (%ld MB)\n", __func__, sz, sz/0x100000);
 	memblock_remove(MSM8625_CPU_PHYS, SZ_8);
 	memblock_remove(MSM8625_WARM_BOOT_PHYS, SZ_32);
 	memblock_remove(MSM8625_NON_CACHE_MEM, SZ_2K);
+	msm7x27a_reserve();
 }
 
 static void __init msm7x27a_device_i2c_init(void)
@@ -1442,6 +1466,69 @@ static void __init msm7x27a_pm_init(void)
 	msm_pm_register_irqs();
 }
 
+unsigned bt_mac_addr[IFHWADDRLEN];
+
+#ifdef CONFIG_PROC_FS
+static void *frag_start(struct seq_file *m, loff_t *pos)
+{
+	pg_data_t *pgdat;
+	loff_t node = *pos;
+	for (pgdat = first_online_pgdat();
+	     pgdat && node;
+	     pgdat = next_online_pgdat(pgdat))
+		--node;
+
+	return pgdat;
+}
+
+static void *frag_next(struct seq_file *m, void *arg, loff_t *pos)
+{
+	pg_data_t *pgdat = (pg_data_t *)arg;
+
+	(*pos)++;
+	return next_online_pgdat(pgdat);
+}
+
+static void frag_stop(struct seq_file *m, void *arg)
+{
+}
+
+static int bt_addr_file_show(struct seq_file *m, void *arg)
+{
+	seq_printf(m, "%02X:%02X:%02X:%02X:%02X:%02X\n",
+		bt_mac_addr[0], bt_mac_addr[1], bt_mac_addr[2],
+		bt_mac_addr[3], bt_mac_addr[4], bt_mac_addr[5]);
+	return 0;
+};
+
+static const struct seq_operations bt_addr_file_op = {
+	.start		= frag_start,
+	.next		= frag_next,
+	.stop		= frag_stop,
+	.show		= bt_addr_file_show,
+};
+
+static int bt_addr_file_open(struct inode *inode, struct file *file)
+{
+	return seq_open(file, &bt_addr_file_op);
+};
+
+static const struct file_operations bt_addr_file_ops = {
+	.open		= bt_addr_file_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= seq_release,
+};
+#endif
+
+static int __init bt_addr_proc_init(void)
+{
+#ifdef CONFIG_PROC_FS
+	proc_create("bt_mac_addr", S_IRUGO, NULL, &bt_addr_file_ops);
+#endif
+	return 0;
+}
+
 static void __init msm7x2x_init(void)
 {
 	msm7x2x_misc_init();
@@ -1468,6 +1555,7 @@ static void __init msm7x2x_init(void)
     /*before bt probe, config the bt_wake_msm gpio*/
     bt_wake_msm_config();
 #endif
+	bt_addr_proc_init();
 	msm7x27a_add_footswitch_devices();
 	msm7x27a_add_platform_devices();
 	/* Ensure ar6000pm device is registered before MMC/SDC */
@@ -1515,6 +1603,16 @@ static void __init msm7x2x_init_early(void)
 {
 	msm_msm7627a_allocate_memory_regions();
 }
+
+static int __init board_bt_addr_setup(char *btaddr)
+{
+	sscanf(btaddr, "%02X:%02X:%02X:%02X:%02X:%02X",
+		&bt_mac_addr[0], &bt_mac_addr[1], &bt_mac_addr[2],
+		&bt_mac_addr[3], &bt_mac_addr[4], &bt_mac_addr[5]);
+	return 1;
+};
+
+__setup("ro.bt.bdaddr_path", board_bt_addr_setup);
 
 MACHINE_START(MSM7X27A_RUMI3, "QCT MSM7x27a RUMI3")
 	.atag_offset	= 0x100,
